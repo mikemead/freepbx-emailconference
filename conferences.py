@@ -354,7 +354,7 @@ def main():
 			print bcolors.WARNING + "0" + bcolors.ENDC + " request(s) found"
 				
 	# Now the requests are processed, let's do some cleaning up
-	print bcolors.HEADER + "Cleanup expired conferences" + bcolors.ENDC
+	print bcolors.HEADER + "Cleaning up expired conferences" + bcolors.ENDC
 	cleanup_conferences()
 	
 	print bcolors.HEADER + "Finished!" + bcolors.ENDC
