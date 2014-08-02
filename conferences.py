@@ -211,25 +211,40 @@ def cleanup_conferences():
 	""" Cleans up any expired conferences and sets a random pin """
 	# Connect to MySQL / Asterisk database
 	mconn, mcur = mysql_connect(config['hostname'], config['username'], config['password'], config['database'])
+	
 	# Connect to local sqlite database
 	sconn, scur = sqlite_connect(config['databasefile'])
 	
 	# Find conference rooms that have expired
-	scur.execute("SELECT conf_id, exten FROM conference_rooms WHERE available=0 AND expires_on < ?", (datetime.datetime.now(),))
-
-	expired_confs = scur.fetchall()
+	scur.execute("SELECT conf_id, exten, expires_on FROM conference_rooms WHERE available=0")
+	booked_confs = scur.fetchall()
+	
+	expired_confs = []
+	
+	# This is a bit hacky :S (replace later)
+	if booked_confs:
+		for conference in booked_confs:
+			expiry_date = conference[-1].split('.')[:-1][0]
+			
+			if datetime.datetime.strptime(expiry_date, '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
+				expired_confs.append(conference)
+	
 	if expired_confs:
 		for conference in expired_confs:
-			conference_id = conference[0]
-			conference_exten = conference[1]
-			conference_pin = pin_generator()
+			try:
+				conference_id = conference[0]
+				conference_exten = conference[1]
+				conference_pin = pin_generator()
+				
+				# Change the pin on all expired conferences
+				mcur.execute("UPDATE meetme SET userpin=%s, users=0 WHERE exten=%s AND description=CONCAT('Room ', %s) LIMIT 1",(str(conference_pin), str(conference_exten), str(conference_id)))
 
-			# Change the pin on all expired conferences
-			mcur.execute("UPDATE meetme SET userpin=%s, users=0 WHERE exten=%s AND description=CONCAT('Room ', %s) LIMIT 1",(str(conference_pin), str(conference_exten), str(conference_id)))
-
-			# Switch the conference room flag to available
-			scur.execute("UPDATE conference_rooms SET available=1, book_name='', book_email='', pin=%s WHERE conf_id=%s LIMIT 1", (str(conference_id), str(conference_pin)))
-
+				# Switch the conference room flag to available
+				scur.execute("UPDATE conference_rooms SET available=1, book_name='', book_email='', pin=? WHERE conf_id=?", (str(conference_id), str(conference_pin)))
+				
+			except:
+				print "Error - Cleaning up conferences"
+			
 	mconn.commit()
 	mcur.close()
 	sconn.commit()
