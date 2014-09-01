@@ -73,10 +73,10 @@ def sqlite_bootstrap():
         except:
             pass
 
-def mysql_connect(host, user, passwd, db):
+def mysql_connect(host, user, passwd, dbase):
     """ Connects to MySQL database specified in conferences.conf and returns a cursor """
     try:
-        conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=db)
+        conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=dbase)
         return conn, conn.cursor()
     except:
         print bcolors.FAIL + "Failed to connect to MySQL database [" + host + ", " + user + "]" + bcolors.ENDC
