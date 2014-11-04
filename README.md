@@ -24,3 +24,4 @@ FreePBX-EmailConference provides a simple extension to FreePBX allowing users to
 ### Detailed instructions
 
 [Instructions and Supported Platforms](http://www.mikemead.me/projects/freepbx-emailconf/)
+
